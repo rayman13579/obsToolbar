@@ -18,17 +18,26 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs-module.h>
 #include <plugin-support.h>
+#include <qobject.h>
+#include <obs-frontend-api.h>
+#include <filter-dock.hpp>
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
+extern struct obs_source_info my_source;
+
 bool obs_module_load(void)
 {
 	obs_log(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
+	QWidget *main_window = (QWidget *)obs_frontend_get_main_window();
+	FilterDock *dock = new FilterDock(main_window);
+	obs_frontend_add_dock_by_id("filter-dock", "Filters", dock);
 	return true;
 }
 
 void obs_module_unload(void)
 {
+	obs_frontend_remove_dock("filter-dock");
 	obs_log(LOG_INFO, "plugin unloaded");
 }
