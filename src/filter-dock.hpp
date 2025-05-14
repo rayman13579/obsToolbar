@@ -10,7 +10,7 @@
 #include <QCheckBox>
 #include <QLabel>
 #include <map>
-#include <set>
+#include <list>
 
 class FilterDock : public QWidget {
 	Q_OBJECT
@@ -21,9 +21,10 @@ public:
 
 private:
     QListWidget *list = nullptr;
-    std::map<obs_source_t *, std::set<obs_source_t *>> *selectedSources = new std::map<obs_source_t *, std::set<obs_source_t *>>();
+    std::map<obs_source_t *, std::list<obs_source_t *>> *selectedSources = new std::map<obs_source_t *, std::list<obs_source_t *>>();
     OBSSignal sourceSelectSignal;
     OBSSignal sourceDeselectSignal;
+    OBSSignal filterVisibilitySignal;
 	void refreshFilters();
 	void addFilters(obs_source_t *source, bool multiSelect);
     void addVisiblityIconToFilter(QListWidgetItem *item, obs_source_t *filter);

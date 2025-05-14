@@ -23,20 +23,18 @@ FilterDock::FilterDock(QWidget *parent) : QWidget(parent)
 			thiss->sourceSelectSignal.Connect(signal_handler, "item_select",
 				[](void *data, calldata *sceneItem) {
 					FilterDock *thiss = static_cast<FilterDock *>(data);
-					OBSSceneItem item =
-						static_cast<obs_sceneitem_t *>(calldata_ptr(sceneItem, "item"));
+					OBSSceneItem item =static_cast<obs_sceneitem_t *>(calldata_ptr(sceneItem, "item"));
 					obs_source_t *source = obs_sceneitem_get_source(item);
-					(*thiss->selectedSources)[obs_frontend_get_current_scene()].insert(source);
+					(*thiss->selectedSources)[obs_frontend_get_current_scene()].push_back(source);
 					thiss->refreshFilters();
 				},
 				thiss);
 			thiss->sourceDeselectSignal.Connect(signal_handler, "item_deselect",
 				[](void *data, calldata *sceneItem) {
 					FilterDock *thiss = static_cast<FilterDock *>(data);
-					OBSSceneItem item =
-						static_cast<obs_sceneitem_t *>(calldata_ptr(sceneItem, "item"));
+					OBSSceneItem item = static_cast<obs_sceneitem_t *>(calldata_ptr(sceneItem, "item"));
 					obs_source_t *source = obs_sceneitem_get_source(item);
-					(*thiss->selectedSources)[obs_frontend_get_current_scene()].erase(source);
+					(*thiss->selectedSources)[obs_frontend_get_current_scene()].remove(source);
 					thiss->refreshFilters();
 				},
 				thiss);
@@ -52,7 +50,7 @@ FilterDock::~FilterDock()
 void FilterDock::refreshFilters()
 {
 	list->clear();
-    std::set<obs_source_t *> sources = (*selectedSources)[obs_frontend_get_current_scene()];
+	std::list<obs_source_t *> sources = (*selectedSources)[obs_frontend_get_current_scene()];
 	for (obs_source_t *source : sources) {
 		addFilters(source, sources.size() > 1);
 	}
@@ -60,14 +58,14 @@ void FilterDock::refreshFilters()
 
 void FilterDock::addFilters(obs_source_t *source, bool multiSelect)
 {
-    if (obs_source_filter_count(source) == 0) {
-        return;
-    }
-    if (multiSelect) {
-        QListWidgetItem *item = new QListWidgetItem(obs_source_get_name(source));
-        item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
-        list->addItem(item);
-    }
+	if (obs_source_filter_count(source) == 0) {
+		return;
+	}
+	if (multiSelect) {
+		QListWidgetItem *item = new QListWidgetItem(obs_source_get_name(source));
+		item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+		list->addItem(item);
+	}
 	obs_source_enum_filters(
 		source,
 		[](obs_source_t *, obs_source_t *filter, void *data) {
@@ -84,8 +82,20 @@ void FilterDock::addVisiblityIconToFilter(QListWidgetItem *item, obs_source_t *f
 	QCheckBox *visibilityIcon = new QCheckBox();
 	visibilityIcon->setProperty("class", "checkbox-icon indicator-visibility");
 	visibilityIcon->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-	visibilityIcon->setChecked(true);
-
+	visibilityIcon->setChecked(obs_source_enabled(filter));
+	connect(visibilityIcon, &QCheckBox::toggled, this,
+		[this, filter](bool checked) { 
+            obs_source_set_enabled(filter, checked); 
+    });
+	//not properly working
+        filterVisibilitySignal.Connect(obs_source_get_signal_handler(filter), "enable",
+		[](void *data, calldata *filter) {
+			bool enabled = calldata_bool(filter, "enabled");
+			QCheckBox *checkbox = static_cast<QCheckBox *>(data);
+			checkbox->setChecked(enabled);
+		},
+		visibilityIcon);
+    //
 	const char *filter_name = obs_source_get_name(filter);
 	QLabel *label = new QLabel(filter_name);
 	label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);

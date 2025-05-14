@@ -1,5 +1,10 @@
-multiple sources select filter order weird
-eye reperesents actual filter state
-eye clickable to enable/disable filter
 double click filter to open filter window
+no source selected text when no source selected
 video/audio filters distinction?
+
+crash whhen closing OBS :D
+fix horizontal scrolling/wrapping
+filter state does not update when changing filter in actual window (depends on what the last clicked source was or smth)
+filter list does not get updated when adding/removing filter in actual window
+
+cleanup :D
