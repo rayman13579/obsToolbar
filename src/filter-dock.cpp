@@ -4,10 +4,19 @@
 
 FilterDock::FilterDock(QWidget *parent) : QWidget(parent)
 {
-	list = new QListWidget();
-	QVBoxLayout *layout = new QVBoxLayout();
 	setLayout(layout);
-	layout->addWidget(list);
+	list = new QListWidget();
+    noSource = new QLabel("No source selected");
+    noSource->setAlignment(Qt::AlignCenter);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(list);
+    layout->addWidget(noSource);
+
+    setStyleSheet("background: #272A33; border-bottom-left-radius: 2px; border-bottom-right-radius: 2px; border: 1px solid #3C404D; border-top: none;");
+    list->setStyleSheet("QListWidget { border-top-left-radius: 0px; border-top-right-radius: 0px; } QListWidget QWidget { border: none; }");
+
+    style()->unpolish(this);
+    style()->polish(this);
 
 	obs_frontend_add_event_callback(
 		[](enum obs_frontend_event event, void *data) {
@@ -51,6 +60,14 @@ void FilterDock::refreshFilters()
 {
 	list->clear();
 	std::list<obs_source_t *> sources = (*selectedSources)[obs_frontend_get_current_scene()];
+    
+    if (sources.empty()) {
+        list->hide();
+        noSource->show();
+        return;
+    }
+    list->show();
+    noSource->hide();
 	for (obs_source_t *source : sources) {
 		addFilters(source, sources.size() > 1);
 	}
@@ -87,7 +104,7 @@ void FilterDock::addVisiblityIconToFilter(QListWidgetItem *item, obs_source_t *f
 		[this, filter](bool checked) { 
             obs_source_set_enabled(filter, checked); 
     });
-	//not properly working
+	/*not properly working
         filterVisibilitySignal.Connect(obs_source_get_signal_handler(filter), "enable",
 		[](void *data, calldata *filter) {
 			bool enabled = calldata_bool(filter, "enabled");
@@ -95,7 +112,7 @@ void FilterDock::addVisiblityIconToFilter(QListWidgetItem *item, obs_source_t *f
 			checkbox->setChecked(enabled);
 		},
 		visibilityIcon);
-    //
+    */
 	const char *filter_name = obs_source_get_name(filter);
 	QLabel *label = new QLabel(filter_name);
 	label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);

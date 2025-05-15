@@ -20,7 +20,9 @@ public:
 	~FilterDock();
 
 private:
+	QVBoxLayout *layout = new QVBoxLayout();
     QListWidget *list = nullptr;
+    QLabel *noSource = nullptr;
     std::map<obs_source_t *, std::list<obs_source_t *>> *selectedSources = new std::map<obs_source_t *, std::list<obs_source_t *>>();
     OBSSignal sourceSelectSignal;
     OBSSignal sourceDeselectSignal;
